@@ -1,0 +1,24 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: daily-quiz-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - quiz_mongo_data:/data/db
+  api:
+    build: ./backend
+    container_name: daily-quiz-api
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongodb:27017/daily_quiz
+      CLIENT_ORIGINS: http://localhost:4200
+    ports:
+      - "3000:3000"
+volumes:
+  quiz_mongo_data:

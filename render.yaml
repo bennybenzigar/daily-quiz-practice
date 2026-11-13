@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: daily-quiz-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: CLIENT_ORIGINS
+        sync: false

@@ -1,0 +1,139 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">Q</div><div><strong>Daily Quiz</strong><small>Practice workspace</small></div></div>
+    <nav>
+      <button [class.active]="page()==='dashboard'" (click)="go('dashboard')">▦ <span>Dashboard</span></button>
+      <button [class.active]="page()==='import'" (click)="go('import')">＋ <span>Import questions</span></button>
+      <button [class.active]="page()==='progress'" (click)="go('progress')">▤ <span>My progress</span></button>
+    </nav>
+    <div class="sidebar-note"><span class="dot"></span> Synced to your cloud database</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div><span class="eyebrow">PERSONAL LEARNING</span><h1>{{ page()==='dashboard' ? 'Your daily practice' : page()==='import' ? 'Import question bank' : page()==='progress' ? 'Your progress' : 'Practice session' }}</h1></div>
+      <button class="primary small" (click)="go('import')">＋ Add questions</button>
+    </header>
+
+    @if (page() === 'dashboard') {
+      <section class="welcome">
+        <div><span class="eyebrow light">A LITTLE PRACTICE EVERY DAY</span><h2>Build knowledge,<br>one question at a time.</h2><p>Choose a topic, practise at your pace, and keep track of your progress.</p><button class="white-button" (click)="go('import')">Import your first JSON <span>→</span></button></div>
+        <div class="welcome-art"><div class="art-circle">✦</div><div class="art-card"><span>DAILY GOAL</span><strong>10</strong><small>questions a day</small></div></div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card"><span class="stat-icon purple">▤</span><div><strong>{{ totalQuestions() }}</strong><small>Total questions</small></div></article>
+        <article class="stat-card"><span class="stat-icon blue">◈</span><div><strong>{{ topics().length }}</strong><small>Topics</small></div></article>
+        <article class="stat-card"><span class="stat-icon green">✓</span><div><strong>{{ overallAccuracy() }}%</strong><small>Overall accuracy</small></div></article>
+        <article class="stat-card"><span class="stat-icon orange">♨</span><div><strong>{{ dailyStreak() }}</strong><small>Day streak</small></div></article>
+      </section>
+
+      <section class="section-heading"><div><h2>Choose what to practise</h2><p>Select a topic and subtopic to begin.</p></div><button class="text-button" (click)="go('import')">Manage question bank ↗</button></section>
+      <section class="practice-layout">
+        <article class="panel selector-panel">
+          <label>TOPIC</label>
+          <select [ngModel]="selectedTopic()" (ngModelChange)="chooseTopic($event)">
+            <option value="">Choose a topic</option>
+            @for (topic of topics(); track topic) { <option [value]="topic">{{ topic }}</option> }
+          </select>
+          <label>SUBTOPIC</label>
+          <select [ngModel]="selectedSubtopic()" (ngModelChange)="chooseSubtopic($event)" [disabled]="!selectedTopic()">
+            <option value="">Choose a subtopic</option>
+            @for (sub of subtopics(); track sub) { <option [value]="sub">{{ sub }}</option> }
+          </select>
+          <label>QUESTIONS PER SESSION</label>
+          <div class="count-options">
+            @for (count of [5,10,20,30,50]; track count) { <button [class.selected]="questionCount()===count" (click)="questionCount.set(count)">{{ count }}</button> }
+          </div>
+          <label class="toggle-row"><input type="checkbox" [ngModel]="examMode()" (ngModelChange)="examMode.set($event)"><span>Exam mode <small>Show answers after submission</small></span></label>
+          <button class="primary full" [disabled]="!selectedSets().length" (click)="startPractice()">Start practice <span>→</span></button>
+          @if (selectedSets().length) { <p class="muted tiny">{{ selectedSets().length }} question bank selected · {{ selectedSets()[0].questions.length }} questions</p> }
+        </article>
+        <article class="panel bank-panel">
+          <div class="panel-title"><div><h3>Your question bank</h3><p>Imported topics and subtopics</p></div><span class="count-pill">{{ quizSets().length }} banks</span></div>
+          @if (!quizSets().length) {
+            <div class="empty-state"><div class="empty-icon">＋</div><h3>No questions yet</h3><p>Import a JSON file to create your first topic and subtopic.</p><button class="outline-button" (click)="go('import')">Import JSON</button></div>
+          } @else {
+            <div class="bank-list">
+              @for (set of quizSets(); track set.id) {
+                <div class="bank-row"><div class="topic-icon">▤</div><div class="bank-info"><strong>{{ set.topic }}</strong><span>{{ set.subtopic }} · {{ set.questions.length }} questions</span></div><button class="icon-button" title="Practise this bank" (click)="chooseTopic(set.topic); chooseSubtopic(set.subtopic); startPractice()">→</button><button class="icon-button danger-text" title="Delete bank" (click)="deleteSet(set)">×</button></div>
+              }
+            </div>
+          }
+        </article>
+      </section>
+      <section class="tip"><span>✦</span><div><strong>Small steps add up</strong><p>Try a short 10-question session every day. Your attempts and accuracy are saved to your MongoDB database.</p></div></section>
+    }
+
+    @if (page() === 'import') {
+      <section class="import-grid">
+        <article class="panel import-panel">
+          <div class="panel-title"><div><h2>Bring your questions</h2><p>Upload a JSON file or paste JSON content below.</p></div><span class="step-tag">01 / IMPORT</span></div>
+          <div class="dropzone"><div class="upload-icon">⇧</div><strong>{{ fileName() || 'Choose a JSON file' }}</strong><p>Import questions from your computer</p><label class="outline-button file-label">Browse files<input type="file" accept=".json,application/json" (change)="onFileSelected($event)"></label></div>
+          <div class="or-divider"><span>OR PASTE JSON</span></div>
+          <textarea class="json-input" [ngModel]="importJson()" (ngModelChange)="importJson.set($event)" placeholder='Paste your JSON here...'></textarea>
+          <div class="form-grid">
+            <div><label>TOPIC OVERRIDE <small>(optional)</small></label><input [ngModel]="importTopic()" (ngModelChange)="importTopic.set($event)" placeholder="e.g. History"></div>
+            <div><label>SUBTOPIC OVERRIDE <small>(optional)</small></label><input [ngModel]="importSubtopic()" (ngModelChange)="importSubtopic.set($event)" placeholder="e.g. Vasco da Gama"></div>
+          </div>
+          <p class="muted tiny">Leave overrides empty to use topic and subtopic from your JSON. Existing matching topic/subtopic banks receive the new questions.</p>
+          @if (importError()) { <div class="alert error">{{ importError() }}</div> }
+          @if (importSuccess()) { <div class="alert success">{{ importSuccess() }}</div> }
+          <button class="primary full" [disabled]="!importJson().trim()" (click)="importQuestions()">Import questions <span>→</span></button>
+        </article>
+        <aside class="panel format-panel">
+          <span class="step-tag">02 / FORMAT</span><h3>Expected JSON structure</h3><p>Your JSON should include a topic, subtopic, and questions array.</p>
+          <pre>{{ sampleFormat }}</pre>
+          <div class="format-note"><strong>Answer matching</strong><p>The answer can be the exact option text or its ID (A, B, C, D). Each question needs at least two options.</p></div>
+          <button class="text-button" (click)="loadSampleJson()">Load sample JSON</button>
+        </aside>
+      </section>
+      <section class="panel backup-panel"><div><h3>Back up your practice data</h3><p>Export all question banks and practice history to a JSON backup file.</p></div><div class="backup-actions"><button class="outline-button" (click)="exportBackup()">↓ Export backup</button><label class="outline-button file-label">Restore backup<input type="file" accept=".json,application/json" (change)="importBackup($event)"></label></div></section>
+    }
+
+    @if (page() === 'practice') {
+      @if (!submitted() && currentQuestion()) {
+        <section class="quiz-wrap">
+          <div class="quiz-top"><button class="text-button" (click)="go('dashboard')">← Exit practice</button><span class="count-pill">{{ selectedTopic() }} / {{ selectedSubtopic() }}</span><span class="muted">Question {{ currentIndex()+1 }} of {{ activeQuestions().length }}</span></div>
+          <div class="progress-track"><div [style.width.%]="(currentIndex()+1)/activeQuestions().length*100"></div></div>
+          <article class="panel question-panel">
+            <div class="question-meta"><span class="step-tag">QUESTION {{ currentIndex()+1 }}</span><span class="muted">{{ currentQuestion().difficulty || 'medium' }}</span></div>
+            <h2>{{ currentQuestion().question }}</h2>
+            <p class="muted">Select one answer.</p>
+            <div class="options-list">
+              @for (option of currentQuestion().options; track option.id) {
+                <button class="answer-option" [class.chosen]="selectedAnswer()===option.id" (click)="selectAnswer(option.id)">
+                  <span class="option-letter">{{ option.id }}</span><span>{{ option.text }}</span><span class="option-check">{{ selectedAnswer()===option.id ? '✓' : '' }}</span>
+                </button>
+              }
+            </div>
+            @if (!examMode() && selectedAnswer()) {
+              <div class="instant-feedback" [class.good]="selectedAnswer()===currentQuestion().answer" [class.bad]="selectedAnswer()!==currentQuestion().answer">
+                <strong>{{ selectedAnswer()===currentQuestion().answer ? 'Correct answer!' : 'Not quite. Try another option.' }}</strong>
+                @if (selectedAnswer()===currentQuestion().answer && currentQuestion().explanation) { <p>{{ currentQuestion().explanation }}</p> }
+              </div>
+            }
+            <div class="quiz-actions"><button class="outline-button" [disabled]="currentIndex()===0" (click)="previous()">Previous</button><span>{{ answeredCount() }} answered</span>@if (currentIndex()===activeQuestions().length-1) { <button class="primary" (click)="submitPractice()">Finish practice</button> } @else { <button class="primary" (click)="next()">Next question →</button> }</div>
+          </article>
+        </section>
+      } @else if (submitted()) {
+        <section class="panel result-panel"><div class="result-icon">✓</div><span class="eyebrow">SESSION COMPLETED</span><h2>Nice work. Keep going!</h2><div class="score-ring"><strong>{{ score() }}/{{ activeQuestions().length }}</strong><span>correct</span></div><h3>{{ activeQuestions().length ? (score()/activeQuestions().length*100 | number:'1.0-0') : 0 }}% accuracy</h3><p class="muted">Your result has been saved to your progress history.</p>
+          <div class="review-list"><h3>Review your answers</h3>@for (q of activeQuestions(); track q.id; let i = $index) { <div class="review-row"><span class="review-number">{{ i+1 }}</span><div><strong>{{ q.question }}</strong><p>Your answer: {{ optionText(q, answers()[q.id]) }}</p><small>Correct: {{ correctOptionText(q) }} @if(q.explanation){ · {{ q.explanation }} }</small></div><span [class.good-text]="answers()[q.id]===q.answer" [class.bad-text]="answers()[q.id]!==q.answer">{{ answers()[q.id]===q.answer ? '✓' : '×' }}</span></div> }</div>
+          <div class="result-actions"><button class="outline-button" (click)="go('dashboard')">Back to dashboard</button><button class="primary" (click)="startPractice()">Practise again</button></div>
+        </section>
+      }
+    }
+
+    @if (page() === 'progress') {
+      <section class="stats-grid progress-stats">
+        <article class="stat-card"><span class="stat-icon purple">▤</span><div><strong>{{ totalAttempts() }}</strong><small>Sessions completed</small></div></article>
+        <article class="stat-card"><span class="stat-icon green">✓</span><div><strong>{{ overallAccuracy() }}%</strong><small>Overall accuracy</small></div></article>
+        <article class="stat-card"><span class="stat-icon orange">♨</span><div><strong>{{ dailyStreak() }}</strong><small>Current streak</small></div></article>
+      </section>
+      <section class="panel history-panel"><div class="panel-title"><div><h2>Practice history</h2><p>Your completed sessions stored in the cloud database.</p></div></div>
+        @if (!sessions().length) { <div class="empty-state"><div class="empty-icon">▤</div><h3>No practice history yet</h3><p>Complete a quiz session to see your progress here.</p></div> }
+        @else { @for (session of sessions().slice().reverse(); track session.id) { <div class="history-row"><div class="topic-icon">✓</div><div class="bank-info"><strong>{{ session.topic }} · {{ session.subtopic }}</strong><span>{{ session.date }} · {{ session.correct }} of {{ session.total }} correct</span></div><strong class="history-score">{{ (session.correct/session.total*100 | number:'1.0-0') }}%</strong></div> } }
+      </section>
+    }
+  </main>
+</div>

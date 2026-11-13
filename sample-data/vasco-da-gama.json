@@ -1,0 +1,37 @@
+{
+  "topic": "History",
+  "subtopic": "Vasco da Gama",
+  "description": "Practice questions based on your Vasco da Gama notes.",
+  "questions": [
+    {
+      "question": "In which year did Vasco da Gama reach Calicut?",
+      "options": ["1492", "1497", "1498", "1502"],
+      "answer": "1498",
+      "explanation": "Vasco da Gama reached Calicut on 20 May 1498."
+    },
+    {
+      "question": "Who was the ruler of Calicut when Vasco da Gama arrived?",
+      "options": ["Tipu Sultan", "Zamorin", "Akbar", "Krishnadevaraya"],
+      "answer": "Zamorin",
+      "explanation": "The ruler of Calicut was known as the Zamorin or Samuthiri."
+    },
+    {
+      "question": "From which city did Vasco da Gama begin his first voyage in 1497?",
+      "options": ["Madrid", "Lisbon", "London", "Rome"],
+      "answer": "Lisbon",
+      "explanation": "His first voyage departed from Lisbon, Portugal, on 8 July 1497."
+    },
+    {
+      "question": "Which explorer rounded the Cape of Good Hope in 1488?",
+      "options": ["Vasco da Gama", "Christopher Columbus", "Bartolomeu Dias", "Ferdinand Magellan"],
+      "answer": "Bartolomeu Dias",
+      "explanation": "Bartolomeu Dias rounded the southern tip of Africa in 1488."
+    },
+    {
+      "question": "Where did Vasco da Gama die?",
+      "options": ["Calicut", "Goa", "Cochin", "Lisbon"],
+      "answer": "Cochin",
+      "explanation": "Vasco da Gama died in Cochin on 24 December 1524."
+    }
+  ]
+}
